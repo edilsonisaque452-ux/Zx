@@ -1,0 +1,512 @@
+-- ZX EXTERNAL — cola no Arceus X ou Delta
+-- verde/azul, neve caindo, armas reais, spawn, nick, emote, kill, anti-detect
+
+local Players = game:GetService("Players")
+local RS = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+local TS = game:GetService("TweenService")
+local HTTP = game:GetService("HttpService")
+local lp = Players.LocalPlayer
+local mouse = lp:GetMouse()
+
+-- ── ANTI DETECT ──────────────────────────────────────────────────
+local mt = getrawmetatable(game)
+local old = mt.__namecall
+setreadonly(mt, false)
+mt.__namecall = newcclosure(function(self, ...)
+    local args = {...}
+    local method = getnamecallmethod()
+    -- bloqueia FireServer de scripts de detecção
+    if method == "FireServer" then
+        local name = tostring(args[1])
+        if name:find("detect") or name:find("cheat") or name:find("hack") then
+            return nil
+        end
+    end
+    return old(self, ...)
+end)
+setreadonly(mt, true)
+
+-- ── GUI ──────────────────────────────────────────────────────────
+local sg = Instance.new("ScreenGui", game.CoreGui)
+sg.Name = "ZXExternal"
+sg.ResetOnSpawn = false
+sg.IgnoreGuiInset = true
+
+-- NEVE CAINDO
+for i = 1, 60 do
+    local floco = Instance.new("TextLabel", sg)
+    floco.Text = "❄"
+    floco.TextColor3 = Color3.fromRGB(180, 230, 255)
+    floco.BackgroundTransparency = 1
+    floco.TextSize = math.random(10, 22)
+    floco.ZIndex = 1
+    local startX = math.random(0, 100) / 100
+    floco.Position = UDim2.new(startX, 0, -0.05, 0)
+    floco.Size = UDim2.new(0, 30, 0, 30)
+
+    local speed = math.random(2, 6)
+    local drift = (math.random(-10, 10)) / 1000
+
+    RS.Heartbeat:Connect(function(dt)
+        floco.Position = UDim2.new(
+            floco.Position.X.Scale + drift,
+            0,
+            floco.Position.Y.Scale + dt / speed,
+            0
+        )
+        if floco.Position.Y.Scale > 1.05 then
+            floco.Position = UDim2.new(math.random(0,100)/100, 0, -0.05, 0)
+        end
+    end)
+end
+
+-- JANELA PRINCIPAL
+local main = Instance.new("Frame", sg)
+main.Size = UDim2.new(0, 320, 0, 560)
+main.Position = UDim2.new(0.5, -160, 0.5, -280)
+main.BackgroundColor3 = Color3.fromRGB(8, 12, 20)
+main.BorderSizePixel = 0
+main.ZIndex = 10
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 16)
+
+-- borda gradiente verde/azul
+local stroke = Instance.new("UIStroke", main)
+stroke.Color = Color3.fromRGB(0, 200, 120)
+stroke.Thickness = 2
+
+-- HEADER
+local header = Instance.new("Frame", main)
+header.Size = UDim2.new(1, 0, 0, 48)
+header.BackgroundColor3 = Color3.fromRGB(0, 160, 90)
+header.BorderSizePixel = 0
+header.ZIndex = 11
+Instance.new("UICorner", header).CornerRadius = UDim.new(0, 16)
+
+local titleLbl = Instance.new("TextLabel", header)
+titleLbl.Size = UDim2.new(1, -50, 1, 0)
+titleLbl.Position = UDim2.new(0, 10, 0, 0)
+titleLbl.BackgroundTransparency = 1
+titleLbl.Text = "⚡ ZX EXTERNAL"
+titleLbl.TextColor3 = Color3.new(1,1,1)
+titleLbl.TextScaled = true
+titleLbl.Font = Enum.Font.GothamBold
+titleLbl.ZIndex = 12
+
+local subLbl = Instance.new("TextLabel", header)
+subLbl.Size = UDim2.new(1, 0, 0, 14)
+subLbl.Position = UDim2.new(0, 10, 1, -16)
+subLbl.BackgroundTransparency = 1
+subLbl.Text = "built by @odil9 • discord.gg/xGDFJ29MmA"
+subLbl.TextColor3 = Color3.fromRGB(180, 255, 210)
+subLbl.TextSize = 10
+subLbl.Font = Enum.Font.Gotham
+subLbl.ZIndex = 12
+
+-- minimizar
+local minBtn = Instance.new("TextButton", header)
+minBtn.Size = UDim2.new(0, 36, 0, 36)
+minBtn.Position = UDim2.new(1, -42, 0, 6)
+minBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 60)
+minBtn.Text = "−"
+minBtn.TextColor3 = Color3.new(1,1,1)
+minBtn.TextScaled = true
+minBtn.Font = Enum.Font.GothamBold
+minBtn.ZIndex = 13
+Instance.new("UICorner", minBtn).CornerRadius = UDim.new(0, 8)
+
+local minimized = false
+local content = Instance.new("Frame", main)
+content.Size = UDim2.new(1, 0, 1, -52)
+content.Position = UDim2.new(0, 0, 0, 52)
+content.BackgroundTransparency = 1
+content.ZIndex = 11
+
+minBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    content.Visible = not minimized
+    main.Size = minimized and UDim2.new(0, 320, 0, 52) or UDim2.new(0, 320, 0, 560)
+    minBtn.Text = minimized and "+" or "−"
+end)
+
+-- arrastar
+local dragging, dragStart, startPos
+header.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = i.Position
+        startPos = main.Position
+    end
+end)
+UIS.InputChanged:Connect(function(i)
+    if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = i.Position - dragStart
+        main.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+UIS.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+end)
+
+-- scroll
+local scroll = Instance.new("ScrollingFrame", content)
+scroll.Size = UDim2.new(1, 0, 1, 0)
+scroll.BackgroundTransparency = 1
+scroll.ScrollBarThickness = 4
+scroll.ScrollBarImageColor3 = Color3.fromRGB(0, 200, 120)
+scroll.ZIndex = 11
+scroll.CanvasSize = UDim2.new(0, 0, 0, 900)
+
+local layout = Instance.new("UIListLayout", scroll)
+layout.Padding = UDim.new(0, 6)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+local pad = Instance.new("UIPadding", scroll)
+pad.PaddingLeft = UDim.new(0, 8)
+pad.PaddingRight = UDim.new(0, 8)
+pad.PaddingTop = UDim.new(0, 8)
+
+-- ── HELPERS ──────────────────────────────────────────────────────
+local function section(name)
+    local lbl = Instance.new("TextLabel", scroll)
+    lbl.Size = UDim2.new(1, 0, 0, 24)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = "── " .. name .. " ──"
+    lbl.TextColor3 = Color3.fromRGB(0, 220, 140)
+    lbl.TextSize = 12
+    lbl.Font = Enum.Font.GothamBold
+    lbl.ZIndex = 12
+    return lbl
+end
+
+local function toggleBtn(labelOn, labelOff, callback)
+    local btn = Instance.new("TextButton", scroll)
+    btn.Size = UDim2.new(1, 0, 0, 38)
+    btn.BackgroundColor3 = Color3.fromRGB(20, 40, 30)
+    btn.Text = "▶ " .. labelOff
+    btn.TextColor3 = Color3.fromRGB(150, 150, 150)
+    btn.TextScaled = true
+    btn.Font = Enum.Font.GothamBold
+    btn.ZIndex = 12
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    local on = false
+    btn.MouseButton1Click:Connect(function()
+        on = not on
+        btn.BackgroundColor3 = on and Color3.fromRGB(0, 160, 90) or Color3.fromRGB(20, 40, 30)
+        btn.TextColor3 = on and Color3.new(1,1,1) or Color3.fromRGB(150,150,150)
+        btn.Text = (on and "✓ " .. labelOn or "▶ " .. labelOff)
+        callback(on)
+    end)
+    return btn
+end
+
+local function actionBtn(label, callback)
+    local btn = Instance.new("TextButton", scroll)
+    btn.Size = UDim2.new(1, 0, 0, 38)
+    btn.BackgroundColor3 = Color3.fromRGB(0, 80, 160)
+    btn.Text = label
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.TextScaled = true
+    btn.Font = Enum.Font.GothamBold
+    btn.ZIndex = 12
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    btn.MouseButton1Click:Connect(callback)
+    return btn
+end
+
+local function inputBox(placeholder)
+    local box = Instance.new("TextBox", scroll)
+    box.Size = UDim2.new(1, 0, 0, 36)
+    box.BackgroundColor3 = Color3.fromRGB(15, 30, 25)
+    box.PlaceholderText = placeholder
+    box.Text = ""
+    box.TextColor3 = Color3.new(1,1,1)
+    box.PlaceholderColor3 = Color3.fromRGB(100,100,100)
+    box.TextScaled = true
+    box.Font = Enum.Font.Gotham
+    box.ZIndex = 12
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 8)
+    return box
+end
+
+local function notify(msg)
+    local n = Instance.new("TextLabel", sg)
+    n.Size = UDim2.new(0, 260, 0, 40)
+    n.Position = UDim2.new(0.5, -130, 1, -60)
+    n.BackgroundColor3 = Color3.fromRGB(0, 160, 90)
+    n.Text = "⚡ " .. msg
+    n.TextColor3 = Color3.new(1,1,1)
+    n.TextScaled = true
+    n.Font = Enum.Font.GothamBold
+    n.ZIndex = 20
+    Instance.new("UICorner", n).CornerRadius = UDim.new(0, 10)
+    TS:Create(n, TweenInfo.new(0.3), {Position = UDim2.new(0.5,-130,1,-80)}):Play()
+    task.delay(2.5, function()
+        TS:Create(n, TweenInfo.new(0.3), {Position = UDim2.new(0.5,-130,1,-40)}):Play()
+        task.wait(0.3); n:Destroy()
+    end)
+end
+
+-- ── ESTADO ───────────────────────────────────────────────────────
+local flags = {
+    speed = false, fly = false, noclip = false,
+    killaura = false, esp = false, inf_ammo = false
+}
+local flyConn, noclipConn, killauraConn, espObjs = nil, nil, nil, {}
+
+-- ── SEÇÃO: MOVIMENTO ─────────────────────────────────────────────
+section("⚡ MOVIMENTO")
+
+toggleBtn("Speed ON","Speed OFF", function(on)
+    local c = lp.Character
+    if c then c.Humanoid.WalkSpeed = on and 80 or 16 end
+    notify(on and "Speed ativado" or "Speed desligado")
+end)
+
+toggleBtn("Fly ON","Fly OFF", function(on)
+    local c = lp.Character
+    if not c then return end
+    local hrp2 = c.HumanoidRootPart
+    if on then
+        local bv = Instance.new("BodyVelocity", hrp2)
+        bv.Name = "ZXFly"
+        bv.MaxForce = Vector3.new(1e9,1e9,1e9)
+        flyConn = RS.Heartbeat:Connect(function()
+            local cam = workspace.CurrentCamera
+            local fwd = cam.CFrame.LookVector
+            local vel = Vector3.new(0,0,0)
+            if UIS:IsKeyDown(Enum.KeyCode.W) then vel = vel + fwd * 60 end
+            if UIS:IsKeyDown(Enum.KeyCode.S) then vel = vel - fwd * 60 end
+            if UIS:IsKeyDown(Enum.KeyCode.Space) then vel = vel + Vector3.new(0,40,0) end
+            if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then vel = vel - Vector3.new(0,40,0) end
+            bv.Velocity = vel
+        end)
+    else
+        if flyConn then flyConn:Disconnect() end
+        local bv = hrp2:FindFirstChild("ZXFly")
+        if bv then bv:Destroy() end
+    end
+    notify(on and "Voando" or "Fly desligado")
+end)
+
+toggleBtn("Noclip ON","Noclip OFF", function(on)
+    if on then
+        noclipConn = RS.Stepped:Connect(function()
+            local c = lp.Character
+            if c then
+                for _, v in pairs(c:GetDescendants()) do
+                    if v:IsA("BasePart") then v.CanCollide = false end
+                end
+            end
+        end)
+    else
+        if noclipConn then noclipConn:Disconnect() end
+    end
+    notify(on and "Noclip ON" or "Noclip OFF")
+end)
+
+-- ── SEÇÃO: COMBATE ───────────────────────────────────────────────
+section("💀 COMBATE")
+
+toggleBtn("Kill Aura ON","Kill Aura OFF", function(on)
+    if on then
+        killauraConn = RS.Heartbeat:Connect(function()
+            local c = lp.Character
+            if not c then return end
+            local hrp2 = c:FindFirstChild("HumanoidRootPart")
+            if not hrp2 then return end
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= lp and p.Character then
+                    local ph = p.Character:FindFirstChild("HumanoidRootPart")
+                    local hm = p.Character:FindFirstChild("Humanoid")
+                    if ph and hm then
+                        local dist = (hrp2.Position - ph.Position).Magnitude
+                        if dist < 15 then hm:TakeDamage(100) end
+                    end
+                end
+            end
+        end)
+    else
+        if killauraConn then killauraConn:Disconnect() end
+    end
+    notify(on and "Kill Aura ON" or "Kill Aura OFF")
+end)
+
+toggleBtn("God Mode ON","God Mode OFF", function(on)
+    local c = lp.Character
+    if c then
+        local hm = c:FindFirstChild("Humanoid")
+        if hm then
+            hm.MaxHealth = on and math.huge or 100
+            hm.Health = on and math.huge or 100
+        end
+    end
+    notify(on and "Imortal" or "God Mode OFF")
+end)
+
+-- ── SEÇÃO: ARMAS / SPAWN ─────────────────────────────────────────
+section("🔫 ARMAS E SPAWN")
+
+actionBtn("⚔ Spawnar arma do mapa", function()
+    local closest, dist = nil, 50
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("Tool") or obj:IsA("Model") then
+            local bp = obj:FindFirstChildWhichIsA("BasePart")
+            if bp then
+                local d = (hrp.Position - bp.Position).Magnitude
+                if d < dist then dist = d; closest = obj end
+            end
+        end
+    end
+    if closest then
+        local clone = closest:Clone()
+        clone.Parent = lp.Backpack
+        notify("Arma pega: " .. closest.Name)
+    else
+        notify("Nenhuma arma perto")
+    end
+end)
+
+actionBtn("🚗 Spawnar veículo mais próximo", function()
+    local closest, dist = nil, 200
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("Model") and (
+            obj.Name:lower():find("car") or
+            obj.Name:lower():find("vehicle") or
+            obj.Name:lower():find("truck") or
+            obj.Name:lower():find("bike") or
+            obj.Name:lower():find("moto")
+        ) then
+            local bp = obj:FindFirstChildWhichIsA("BasePart")
+            if bp then
+                local d = (hrp.Position - bp.Position).Magnitude
+                if d < dist then dist = d; closest = obj end
+            end
+        end
+    end
+    if closest then
+        local clone = closest:Clone()
+        clone:SetPrimaryPartCFrame(hrp.CFrame * CFrame.new(0, 0, -8))
+        clone.Parent = workspace
+        notify("Veículo spawnado: " .. closest.Name)
+    else
+        notify("Nenhum veículo no mapa")
+    end
+end)
+
+actionBtn("💰 Auto coletar itens do mapa", function()
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") then
+            local n = obj.Name:lower()
+            if n:find("coin") or n:find("gem") or n:find("cash")
+            or n:find("money") or n:find("item") or n:find("drop") then
+                hrp.CFrame = CFrame.new(obj.Position)
+                task.wait(0.05)
+            end
+        end
+    end
+    notify("Coleta concluída")
+end)
+
+-- ── SEÇÃO: EMOTE / DANÇA ─────────────────────────────────────────
+section("💃 EMOTE E DANÇA")
+
+local emotes = {
+    ["🕺 Dança 1"] = "507771019",
+    ["💃 Dança 2"] = "507776043",
+    ["🤸 Dança 3"] = "507777826",
+    ["👋 Acenar"]  = "507770239",
+    ["🤣 Rir"]     = "507770818",
+    ["👏 Palmas"]  = "507770677",
+}
+
+for name, id in pairs(emotes) do
+    actionBtn(name, function()
+        local hm = lp.Character and lp.Character:FindFirstChild("Humanoid")
+        if hm then
+            hm:LoadAnimation(
+                Instance.new("Animation")
+            )
+            local anim = Instance.new("Animation")
+            anim.AnimationId = "rbxassetid://" .. id
+            local track = hm:LoadAnimation(anim)
+            track:Play()
+            notify(name .. " ativado")
+        end
+    end)
+end
+
+-- ── SEÇÃO: NICK ──────────────────────────────────────────────────
+section("✏️ NICK")
+
+local nickBox = inputBox("Digite o novo nick...")
+scroll:FindFirstChild(nickBox.Name)
+
+actionBtn("✅ Mudar nick", function()
+    local novo = nickBox.Text
+    if novo == "" then notify("Digita um nick primeiro"); return end
+    local c = lp.Character
+    if c then
+        local overhead = c:FindFirstChild("Head") and
+            c.Head:FindFirstChild("Overhead") or
+            Instance.new("BillboardGui", c.Head)
+        overhead.Name = "Overhead"
+        overhead.Size = UDim2.new(0, 200, 0, 50)
+        overhead.StudsOffset = Vector3.new(0, 2, 0)
+        overhead.AlwaysOnTop = true
+        local lbl2 = overhead:FindFirstChild("NickLbl") or
+            Instance.new("TextLabel", overhead)
+        lbl2.Name = "NickLbl"
+        lbl2.Size = UDim2.new(1,0,1,0)
+        lbl2.BackgroundTransparency = 1
+        lbl2.Text = novo
+        lbl2.TextColor3 = Color3.fromRGB(0, 255, 140)
+        lbl2.TextScaled = true
+        lbl2.Font = Enum.Font.GothamBold
+        notify("Nick: " .. novo)
+    end
+end)
+
+-- ── SEÇÃO: ESP ───────────────────────────────────────────────────
+section("👁 ESP")
+
+toggleBtn("ESP ON","ESP OFF", function(on)
+    if on then
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= lp and p.Character then
+                local box = Instance.new("SelectionBox", workspace)
+                box.Name = "ZXESP_" .. p.Name
+                box.Color3 = Color3.fromRGB(0, 200, 120)
+                box.LineThickness = 0.04
+                box.Adornee = p.Character
+                table.insert(espObjs, box)
+            end
+        end
+    else
+        for _, b in pairs(espObjs) do b:Destroy() end
+        espObjs = {}
+    end
+    notify(on and "ESP ON" or "ESP OFF")
+end)
+
+-- ── SEÇÃO: TELEPORTE ─────────────────────────────────────────────
+section("🌀 TELEPORTE")
+
+actionBtn("📍 Teleportar pro mouse (tecla T)", function()
+    notify("Pressiona T pra teleportar")
+end)
+
+UIS.InputBegan:Connect(function(i, gpe)
+    if gpe then return end
+    if i.KeyCode == Enum.KeyCode.T then
+        local c = lp.Character
+        if c then
+            c.HumanoidRootPart.CFrame = CFrame.new(mouse.Hit.Position + Vector3.new(0,3,0))
+        end
+    end
+end)
+
+notify("ZX External carregado!")
